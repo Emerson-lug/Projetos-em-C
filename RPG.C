@@ -23,10 +23,40 @@ Criado um sistema de RPG no terminal.
 
 #include <stdio.h>
 #include <string.h>
-#include <conio.h>
 #include <stdlib.h>
 #include <time.h>
+#ifdef _WIN32
+    // Se o código rodar no seu computador (Windows), ele usa a biblioteca original
+    #include <conio.h> 
+#else
+    // Se rodar no Replit (Linux), nós construímos a função na mão!
+    #include <termios.h>
+    #include <unistd.h>
 
+    // Criando a função _getch() para o Linux
+    int _getch(void) {
+        struct termios oldattr, newattr;
+        int ch;
+        
+        // Pega as configurações atuais do terminal
+        tcgetattr(STDIN_FILENO, &oldattr); 
+        newattr = oldattr;
+        
+        // Desliga a necessidade de apertar Enter (ICANON) e esconde a letra digitada (ECHO)
+        newattr.c_lflag &= ~(ICANON | ECHO); 
+        
+        // Aplica as novas configurações imediatamente
+        tcsetattr(STDIN_FILENO, TCSANOW, &newattr); 
+        
+        // Lê a tecla
+        ch = getchar(); 
+        
+        // Restaura o terminal ao normal para não quebrar outros programas
+        tcsetattr(STDIN_FILENO, TCSANOW, &oldattr); 
+        
+        return ch;
+    }
+#endif
 
 //========================================
 //Structs geral que sera usado no sistema

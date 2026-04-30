@@ -25,38 +25,52 @@ Criado um sistema de RPG no terminal.
 #include <string.h>
 #include <stdlib.h>
 #include <time.h>
+
+// ==============================
+//    ADAPTADOR MULTIPLATAFORMA
+//==============================
+
 #ifdef _WIN32
-    // Se o código rodar no seu computador (Windows), ele usa a biblioteca original
-    #include <conio.h> 
+    #include <conio.h>
 #else
-    // Se rodar no Replit (Linux), nós construímos a função na mão!
+    // Se rodar em (Linux), entra nesse else
     #include <termios.h>
     #include <unistd.h>
 
-    // Criando a função _getch() para o Linux
-    int _getch(void) {
-        struct termios oldattr, newattr;
+    int _getch(void){
+        struct terminos oldattr, newattr;
         int ch;
-        
-        // Pega as configurações atuais do terminal
-        tcgetattr(STDIN_FILENO, &oldattr); 
+
+        //Pegando configurações do terminal
+        tcgettattr(STDIN_FILENO, &oldattr);
         newattr = oldattr;
-        
-        // Desliga a necessidade de apertar Enter (ICANON) e esconde a letra digitada (ECHO)
-        newattr.c_lflag &= ~(ICANON | ECHO); 
-        
-        // Aplica as novas configurações imediatamente
-        tcsetattr(STDIN_FILENO, TCSANOW, &newattr); 
-        
-        // Lê a tecla
-        ch = getchar(); 
-        
-        // Restaura o terminal ao normal para não quebrar outros programas
-        tcsetattr(STDIN_FILENO, TCSANOW, &oldattr); 
-        
+
+        //Desligado a necessidade de apertar ENTER e esconder letra digitada.
+        newattr.c_lflag &= ~(ICANON | ECHO);
+
+        //Aplicando as novas configurações
+        tcsetattr(STDERR_FILENO, TCSANOW, &newattr);
+
+        //Lendo tecla
+        ch = getch();
+
+        //Restaurando terminal ao normal
+        tcsetattr(STDIN_FILENO, TCANOW, &oldattr);
+
         return ch;
     }
 #endif
+
+//========================================
+// FUNÇÃO UNIVELSAL PARA LIMPEZA DE TELA
+//========================================
+void limparTela(){
+#ifdef _WIN32
+    system("cls"); //limpando tela do windows
+#else
+    system("clear"); //limpando tela do Linux
+#endif
+}
 
 //========================================
 //Structs geral que sera usado no sistema
@@ -543,6 +557,21 @@ int main() {
         {2, 2, 2, 0, 6, 6, 0, 0, 0, 0, 0, 2, 2, 2, 2},
         {2, 2, 2, 2, 8, 8, 8, 8, 8, 8, 2, 2, 2, 2, 2},
     };
+    //PRIMEIRA VILA (Abaixo do mundo exterior - mapa 1)
+    int vila1[10][10] ={
+        //0 = chão, 1 = agua, 2 = parede, 3 = bau, 4 = grama alta
+        //5 = entrada/saida vila, 6 = parede vila, 7 = vila, 9 = saida (cima)
+        {2, 2, 2, 2, 9, 9, 9, 9, 2, 2},
+        {2, 2, 1, 0, 0, 0, 0, 0, 2, 2},
+        {2, 1, 1, 0, 0, 0, 0, 0, 0, 2},
+        {2, 1, 0, 0, 0, 0, 0, 0, 0, 2},
+        {6, 6, 6, 6, 6, 6, 5, 0, 0, 2},
+        {6, 7, 7, 7, 7, 7, 6, 4, 4, 2},
+        {5, 7, 7, 7, 7, 7, 6, 6, 4, 2},
+        {6, 7, 7, 7, 7, 7, 7, 6, 3, 2},
+        {6, 7, 7, 7, 7, 7, 7, 6, 4, 2},
+        {6, 6, 6, 6, 5, 6, 6, 6, 2, 2},
+    };
 
     while (estadoJogo != -1){
 
@@ -621,6 +650,7 @@ int main() {
             int continuarNoMapa = 1;
 
             do{
+                limparTela();
                 printf("\n=============== ===========\n");
                 printf("  SPAWN DO MUNDO (CAVERNA)  ");
                 printf("\n===========================\n\n");
@@ -696,7 +726,7 @@ int main() {
                 //TESTE DE TERRENO ANTES DE ANDAR.
 
                 //Testando terreno para ir.
-                if(mapaCaverna[proximoX][proximoY] == 0 || mapaCaverna[proximoX][proximoY] == 6){
+                if(mapaCaverna[proximoX][proximoY] == 0){
                     heroi.posX = proximoX;
                     heroi.posY = proximoY;
                 }
@@ -817,6 +847,7 @@ int main() {
             int continuarNoMapa2 = 1;
             
             do{
+                limparTela();
                 printf("\n======================================\n");
                 printf("    Mundo exterior (Mapa 1 - PLANISE) ");
                 printf("\n=====================================\n\n");
@@ -900,6 +931,7 @@ int main() {
                 //=================
                 //TESTE DE TERRENO 
 
+                //COMBATE INIMIGO
                 if(mapa1[proximoX][proximoY] == 0 || mapa1[proximoX][proximoY] == 6){
                     heroi.posX = proximoX;
                     heroi.posY = proximoY;
@@ -934,8 +966,9 @@ int main() {
                     }
                 }
 
-                //======================
+                //==============================
                 //SISTEMA DE ABIR BAU (planice)
+                //=============================
 
                 else if(mapa1[proximoX][proximoY] == 4){
                     heroi.posX = proximoX;
@@ -945,10 +978,9 @@ int main() {
 
                     int itemEncontrado = 0;
 
-                    //======================
+                    //-----------------------
                     //    ENTREGANDO ITENS
 
-                
                     // POCAO DE CURA
 
                     //VERIFICANDO ITEM, SE TIVER APENAS SOMA.
@@ -978,7 +1010,7 @@ int main() {
                         }
                     }
 
-                    //====================
+                    //--------------------
                     // ITENS DE ARMARURA
                     //--------------------
                     
@@ -1020,8 +1052,9 @@ int main() {
                     
                 }
 
-                //================
-                //  TROCA DE MAPA
+                //=============================
+                //  TROCA DE MAPA PARA CAVERNA
+                //===========================
 
                 //Mapa da zona de spawn 
                 else if(mapa1[proximoX][proximoY] == 9){
@@ -1049,16 +1082,115 @@ int main() {
             }while(continuarNoMapa2 == 1);
             
         }
-        
-        else if(estadoJogo == 3) {
+
+        //===========================
+        //  PRIMEIRA VILA (mapa 2)
+        //===========================
+
+        else if(estadoJogo == 3){
+            //entra em uma matriz 10x10
+            //Onde tem uma vila de comerciantes e um pequeno spawn de mostros
+
+            int movimento;
+            int continuarNomapa3 = 1;
+
+            do{
+                limparTela();
+                printf("\n======================================\n");
+                printf("    TERRENO DE COMERCIO (Mapa 2) ");
+                printf("\n=====================================\n\n");
+
+                for(int i = 0; i < 10; i++){
+                    for(int j = 0; j < 10; j++){
+                        //Mostrando o player no mapa.
+                        if(i == heroi.posX && heroi.posY){
+                            printf(" O ");
+                        }
+
+                        //OBEJETOS DO MAPA
+                        else if(vila1[i][j] == 0){
+                            printf(" . "); // chão
+                        }
+                        else if(vila1[i][j] == 1){
+                            printf(" ~ "); // agua
+                        }
+                        else if(vila1[i][j] == 2){
+                            printf("[#]"); // parede
+                        }
+                        else if(vila1[i][j] == 3){
+                            printf(" ;"); // bau
+                        }
+                        else if(vila1[i][j] == 4){
+                            printf(" ; "); // grama alta
+                        }
+                        else if(vila1[i][j] == 5){
+                            printf(" # "); // entrada/saida vila
+                        }
+                        else if(vila1[i][j] == 6){
+                            printf(" ! "); // parede vila
+                        }
+                        else if(vila1[i][j] == 7){
+                            printf(" * "); // vila
+                        }
+                        else if(vila1[i][j] == 9){
+                            printf("[ ]"); // saida/entrada mapa
+                        }
+                    }
+                    printf("\n");
+                }
+
+                //==========================
+                // MENU DE CONTROLE NO MAPA
+                //--------------------------
+
+                printf("\n===================\n");
+                printf("        COMANDOS  ");
+                printf("\n====================\n\n");
+
+                printf("W: Cima.\n");
+                printf("S: Baixo.\n");
+                printf("A: Esq.\n");
+                printf("D: Dir.\n");
+                printf("I: Menu de Heroi.\n");
+                printf("Q: Sair.\n\n");
+
+                movimento = _getch();
+                //=============================
+
+                //===================================
+                //  LOGICA DE MOVIMENTOS E POSIÇÕES
+                //-----------------------------------
+
+                int proximoX = heroi.posX;
+                int proximoY = heroi.posY;
+
+                //MOVIMENTAÇÃO DO HEROI
+                if(movimento == 'W' || movimento == 'w') proximoX -= 1;
+                else if(movimento == 'S' || movimento == 's') proximoX += 1;
+                else if(movimento == 'A' || movimento == 'a') proximoY -= 1;
+                else if(movimento == 'D' || movimento == 'd') proximoY += 1;
+                else if(movimento == 'Q' || movimento == 'q'){
+                    continuarNomapa3 = 0;
+                    estadoJogo = -1;
+                }
+                else if(movimento == 'I' || movimento == 'i'){
+                    abrirMenuHeroi();
+                }
+
+            }while(continuarNomapa3 == 1);
+        }
+
+
+        else if(estadoJogo == 8) {
             //Player entrou em combate, tendo o sistema de combate.
             //dependendo da pos volta pro estadoJogo == 2 ou avança pro estadoJogo == 4.
         }
 
-        else if(estadoJogo == 4) {
+        else if(estadoJogo == 9) {
             //Saindo do mapa, entra na vila, dependendo do lado que entrou
             //muda as opcao da vila.
             //se sair da vila por outro lado da entrada entra no estadoJogo == 4, mapa 2
+
         }
          //=================================
         //  REGRAS DE STATUS DE PERSONAGEM
